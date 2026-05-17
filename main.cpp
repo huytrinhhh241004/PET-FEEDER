@@ -104,7 +104,7 @@ void logFeed(const char *session,
   File file = SD.open(logFilename(t.year(), t.month(), t.day()), FILE_APPEND);
   if (!file) return;
  
-  // ── Dòng 1: CSV cho web parse ──
+  // Dòng 1: CSV cho web parse
   char csv[100];
   snprintf(csv, sizeof(csv),
     "FEED,%s,%.1f,%.1f,%.1f,%.1f,%.1f,%04d-%02d-%02d,%02d:%02d",
@@ -112,7 +112,7 @@ void logFeed(const char *session,
     t.year(), t.month(), t.day(), t.hour(), t.minute());
   file.println(csv);
  
-  // ── Dòng 2: Dễ đọc ──
+  // Dòng 2: Dữ liệu lưu SD card
   const char *tenBua;
   if      (strcmp(session, "M") == 0) tenBua = "SANG     ";
   else if (strcmp(session, "E") == 0) tenBua = "CHIEU    ";
@@ -136,7 +136,6 @@ void logFeed(const char *session,
   }
   file.println(readable);
  
-  // ── Dòng 3: Phân cách ──
   file.println("---");
   file.close();
 }
@@ -186,11 +185,11 @@ void saveConfig() {
 //  6. Ghi log đầy đủ, lưu lastAfterWeight
 // ═══════════════════════════════════════════════════════════
 void feedUntilWeight(float target, const char *session) {
-  // ── 1. Đọc cân trước ──
+  // Đọc cân trước
   vTaskDelay(pdMS_TO_TICKS(500));
   float before = readWeightNow();
 
-  // ── 2. Tính lượng ăn bữa trước ──
+  // Tính lượng ăn bữa trước
   float atePrev = -1.0f;
   if (lastAfterWeight >= 0.0f) {
     atePrev = lastAfterWeight - before;
@@ -200,7 +199,7 @@ void feedUntilWeight(float target, const char *session) {
   Serial.printf("[FEED] %s | before=%.1fg | lastAW=%.1fg | atePrev=%.1fg | target=%.1fg\n",
     session, before, lastAfterWeight, atePrev, target);
 
-  // ── 3. Bát đã đủ → bỏ qua ──
+  // Bát đã đủ → bỏ qua
   if (before >= target - 1.0f) {
     Serial.println("[FEED] Bat da du, bo qua.");
     logFeed(session, before, 0.0f, before, target, atePrev);
@@ -210,14 +209,13 @@ void feedUntilWeight(float target, const char *session) {
     return;
   }
 
-  // ── 4. Mở servo ──
+  // Mở servo
   // Dùng 3 góc cố định thay vì nhấp nháy → servo không bị giật
   //
   //  SERVO_OPEN  =  0° → mở hoàn toàn, thức ăn chảy nhanh
   //  SERVO_SLOW  = 18° → mở hé, thức ăn nhỏ giọt khi gần đích
   //  SERVO_CLOSE = 30° → đóng hoàn toàn
-  //
-  // Servo di chuyển mượt giữa các góc, không nhấp nháy.
+
 
   const int SERVO_SLOW = 18;
 
@@ -253,10 +251,10 @@ void feedUntilWeight(float target, const char *session) {
 
     if (targetAngle == SERVO_CLOSE) break;
 
-    vTaskDelay(pdMS_TO_TICKS(50));  // poll cân mỗi 50ms
+    vTaskDelay(pdMS_TO_TICKS(50));
   }
 
-  // ── 5. Đọc cân sau ──
+  // Đọc cân sau
   vTaskDelay(pdMS_TO_TICKS(800));
   myServo.detach();
   float after = readWeightNow();
@@ -265,7 +263,7 @@ void feedUntilWeight(float target, const char *session) {
 
   Serial.printf("[FEED] Done | after=%.1fg | added=%.1fg\n", after, added);
 
-  // ── 6. Ghi log + lưu trạng thái ──
+  // Ghi log + lưu trạng thái
   logFeed(session, before, added, after, target, atePrev);
   lastAfterWeight = after;
   saveConfig();
